@@ -16,6 +16,11 @@ FROM ${BASE_IMAGE}
 #============================================================================================
 LABEL maintainer="Kaio César Bezerra Rangel <kaio.ufcg@gmail.com>"
 
+# Instalação do bash shell no Alpine Linux e do MySQL Client
+RUN apk add bash mysql-client
+# Extensões do PHP
+RUN docker-php-ext-install pdo pdo_mysql
+
 #============================================================================================
 # WORKDIR [caminho do diretório de trabalho]
 # Referência: https://docs.docker.com/engine/reference/builder/#workdir
@@ -33,19 +38,25 @@ WORKDIR /var/www
 #
 # Especifica que o argumento seguinte será executado, ou seja, realiza a execução de um comando.
 #============================================================================================
-# Instalação do bash shell no Alpine Linux
-RUN ["apk", "add", "bash", "mysql-client"]
-RUN ["/usr/local/bin/docker-php-ext-install", "pdo", "pdo_mysql"]
-RUN ["curl", "-sS", "https://getcomposer.org/installer", "|", "php", "--", "--install-dir=/usr/local/bin", "--filename=composer"]
-RUN ["rm", "-rf", "/var/www/html"]
+# Remove a pasta padrão do html do PHP
+RUN rm -rf /var/www/html/
+# Gerenciador de pacotes do PHP
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# Laravel
+#RUN composer install && \
+#                cp .env.example .env && \
+#                php artisan key::generate && \
+#                php artisan config:cache
 # Criação de link simbolico: $ ln -s {/path/to/file-name} {link-name}
-RUN ["ln", "-s", "public", "html"]
+RUN ln -s public html
 
 #============================================================================================
 # COPY [arquivo a ser copiado] [destino do arquivo copiado]
 # Referência: https://docs.docker.com/engine/reference/builder/#copy
 #
 # Copia os arquivos da aplicação, para dentro do caminho especificado dentro do container.
+# COPY test relativeDir/   # adds "test" to `WORKDIR`/relativeDir/
+# COPY test /absoluteDir/  # adds "test" to /absoluteDir/
 #============================================================================================
 #COPY . /var/www
 

@@ -25,7 +25,7 @@ LABEL maintainer="Kaio César Bezerra Rangel <kaio.ufcg@gmail.com>"
 # Especifica que o argumento seguinte será executado, ou seja, realiza a execução de um comando.
 #============================================================================================
 # Removendo o arquivo de configurações do NGINX
-RUN ["rm", "/etc/nginx/conf.d/default.conf"]
+RUN rm /etc/nginx/conf.d/default.conf
 
 #============================================================================================
 # COPY [arquivo a ser copiado] [destino do arquivo copiado]
