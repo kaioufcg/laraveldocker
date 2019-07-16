@@ -5,6 +5,7 @@
 # Define uma imagem local ou pública do Docker Store. Em sua primeira execução, ela será
 # baixada para o computador e usada no build para criar as imagens a serem utilizadas.
 #============================================================================================
+# Esta imagem é baseada no popular projeto Alpine Linux, que preza pelo menor tamanho de imagem possível.
 ARG BASE_IMAGE=nginx:1.17.1-alpine
 FROM ${BASE_IMAGE}
 

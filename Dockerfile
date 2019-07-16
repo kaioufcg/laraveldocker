@@ -5,6 +5,11 @@
 # Define uma imagem local ou pública do Docker Store. Em sua primeira execução, ela será
 # baixada para o computador e usada no build para criar as imagens a serem utilizadas.
 #============================================================================================
+# Esta variante contém o PHP-FPM, que é uma implementação FastCGI para PHP.
+# Para usar esta variante de imagem, algum tipo de proxy reverso
+# (como NGINX, Apache ou outra ferramenta que fala o protocolo FastCGI) será necessário.
+# Além disso esta imagem é baseada no popular projeto Alpine Linux,
+# que preza pelo menor tamanho de imagem possível.
 ARG BASE_IMAGE=php:7.3.7-fpm-alpine3.10
 FROM ${BASE_IMAGE}
 
@@ -31,6 +36,16 @@ RUN docker-php-ext-install pdo pdo_mysql
 WORKDIR /var/www
 
 #============================================================================================
+# COPY [arquivo a ser copiado] [destino do arquivo copiado]
+# Referência: https://docs.docker.com/engine/reference/builder/#copy
+#
+# Copia os arquivos da aplicação, para dentro do caminho especificado dentro do container.
+# COPY test relativeDir/   # adds "test" to `WORKDIR`/relativeDir/
+# COPY test /absoluteDir/  # adds "test" to /absoluteDir/
+#============================================================================================
+COPY . /var/www
+
+#============================================================================================
 # RUN <comando como no shell linux ou windows>
 # ou
 # RUN ["executável", "parâmetro1", "parâmetro2"]
@@ -40,25 +55,27 @@ WORKDIR /var/www
 #============================================================================================
 # Remove a pasta padrão do html do PHP
 RUN rm -rf /var/www/html/
-# Gerenciador de pacotes do PHP
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-# Laravel
-#RUN composer install && \
-#                cp .env.example .env && \
-#                php artisan key::generate && \
-#                php artisan config:cache
+
 # Criação de link simbolico: $ ln -s {/path/to/file-name} {link-name}
 RUN ln -s public html
 
-#============================================================================================
-# COPY [arquivo a ser copiado] [destino do arquivo copiado]
-# Referência: https://docs.docker.com/engine/reference/builder/#copy
-#
-# Copia os arquivos da aplicação, para dentro do caminho especificado dentro do container.
-# COPY test relativeDir/   # adds "test" to `WORKDIR`/relativeDir/
-# COPY test /absoluteDir/  # adds "test" to /absoluteDir/
-#============================================================================================
-#COPY . /var/www
+## Download the installer to the current directory
+#RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+## Verify the installer SHA-384
+#RUN php -r "if (hash_file('sha384', 'composer-setup.php') === '48e3236262b34d30969dca3c37281b3b4bbe3221bda826ac6a9a62d6444cdb0dcd0615698a5cbe587c3f0fe57a54d8f5') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+## Run the installer
+#RUN php composer-setup.php --install-dir=/usr/local/bin --filename=composer
+## Remove the installer
+#RUN php -r "unlink('composer-setup.php');"
+
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# Laravel
+RUN composer install && \
+    cp .env.example .env && \
+    php artisan key:generate && \
+    php artisan config:cache && \
+    php artisan migrate
 
 #============================================================================================
 # EXPOSE [número da porta]
